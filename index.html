@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Verification Photos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 30px;
+    }
+    h2 {
+      color: #222;
+      text-align: center;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .preview img {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Verify Your Identity</h2>
+  <form id="uploadForm">
+    <label>Selfie Photo</label>
+    <input type="file" id="selfie" accept="image/*" required />
+
+    <label>ID Front Side</label>
+    <input type="file" id="frontID" accept="image/*" required />
+
+    <label>ID Back Side</label>
+    <input type="file" id="backID" accept="image/*" required />
+
+    <button type="submit">Upload Photos</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const resultDiv = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const selfie = document.getElementById("selfie").files[0];
+      const frontID = document.getElementById("frontID").files[0];
+      const backID = document.getElementById("backID").files[0];
+
+      if (!selfie || !frontID || !backID) {
+        alert("Please select all three photos.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("selfie", selfie);
+      formData.append("frontID", frontID);
+      formData.append("backID", backID);
+
+      resultDiv.innerHTML = "<p>Uploading... Please wait.</p>";
+
+      try {
+        const response = await fetch("https://YOUR-UPLOAD-SERVER-URL/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <h3>✅ Uploaded Successfully!</h3>
+            <p><b>Selfie:</b> <a href="${data.urls.selfie}" target="_blank">View</a></p>
+            <p><b>ID Front:</b> <a href="${data.urls.frontID}" target="_blank">View</a></p>
+            <p><b>ID Back:</b> <a href="${data.urls.backID}" target="_blank">View</a></p>
+          `;
+        } else {
+          resultDiv.innerHTML = "<p>❌ Upload failed. Try again.</p>";
+        }
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "<p>❌ Error connecting to server.</p>";
+      }
+    });
+  </script>
+</body>
+  </html>
