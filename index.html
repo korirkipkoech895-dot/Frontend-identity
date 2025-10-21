@@ -1,174 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-KE">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Identity Verification - Swift Loan</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f4f6fb;padding:20px;display:flex;justify-content:center}
-    .card{background:#fff;padding:22px;border-radius:14px;width:100%;max-width:420px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
-    h2{text-align:center;margin-top:0}
-    label{display:block;margin-top:12px;font-weight:600}
-    input[type="text"], input[type="tel"], input[type="file"]{width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid #ddd}
-    .preview{margin-top:8px}
-    .preview img{width:100%;max-height:220px;object-fit:cover;border-radius:8px}
-    .btn{margin-top:16px;background:#0069ff;color:#fff;padding:12px;border-radius:10px;border:none;cursor:pointer;width:100%;font-weight:700}
-    .btn:disabled{opacity:0.6;cursor:default}
-    .small{font-size:13px;color:#666;margin-top:8px}
-    .spinner {
-      display:inline-block;width:48px;height:48px;border-radius:50%;
-      border:4px dashed #ccc;border-top-color:#2e7dff; animation:spin 1s linear infinite;
-      margin:20px auto; visibility:hidden;
+  <title>Identity Verification | Swift Loan</title>
+  <meta name="description" content="Swift Loan identity verification - upload ID and selfie securely.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#225AAC',
+            'primary-dark': '#1a4a8a',
+            'primary-light': '#e8f1ff'
+          }
+        }
+      }
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .show { visibility: visible; }
-    .success { color: green; font-weight:700; text-align:center; margin-top:10px }
-    .error { color: #c00; text-align:center; margin-top:10px }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg,#e8f1ff 0%,#fff 100%); color:#0f172a; margin:0; }
+    .preview-box{min-height:120px;border:1px dashed rgba(34,90,172,0.15);background:#fbfdff;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px}
+    .preview-box img{max-width:100%;max-height:160px;border-radius:8px;object-fit:cover}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s ease}
+    .modal-backdrop.open{opacity:1;pointer-events:auto}
+    .modal-card{background:#fff;border-radius:12px;padding:20px;max-width:700px;width:94%;max-height:90vh;overflow:auto;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+    .spinner{width:38px;height:38px;border-radius:50%;border:4px solid rgba(0,0,0,0.08);border-top-color:#225AAC;animation:spin 1s linear infinite;margin:auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .stepbar {height:6px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:12px;}
+    .stepbar-fill {height:6px;background:#225AAC;width:33%;transition:width 0.3s ease;}
+    .muted{color:#6b7280}
+    .hidden{display:none}
+    footer{background:#0b1220;color:#cbd5e1;padding-top:40px}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Verify Your Identity</h2>
+<header class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center h-16 px-4">
+    <div class="flex items-center gap-4">
+      <img src="loan-logo.png" alt="Swift Loan" class="h-12 w-auto">
+      <div>
+        <div class="font-semibold text-gray-900 text-lg">Swift Loan</div>
+        <div class="text-xs text-gray-500">Identity Verification</div>
+      </div>
+    </div>
+    <button id="mobileMenuBtn" class="md:hidden p-2 text-primary">
+      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
 
-    <form id="form">
-      <label>Your name as per ID (full name) *</label>
-      <input id="name" name="name" type="text" required placeholder="Full name as on ID" />
+<div id="mobileMenu" class="hidden fixed inset-0 z-40 bg-black bg-opacity-50">
+  <div class="bg-white w-72 h-full p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900">Swift Loan</h3>
+      <button onclick="toggleMobileMenu()"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <nav class="space-y-3">
+      <a href="index.html" class="block text-gray-700 hover:text-primary">Home</a>
+    </nav>
+    <div class="mt-6 border-t pt-4 text-sm">
+      <div>Call: <a href="tel:0732202740" class="text-primary">0732202740</a></div>
+      <div class="mt-1">WhatsApp: <a href="https://wa.me/254732202740" target="_blank" class="text-primary">Chat Now</a></div>
+    </div>
+  </div>
+</div>
 
-      <label>Your ID number (8 or 9 digits) *</label>
-      <input id="idNumber" name="idNumber" type="text" required placeholder="e.g. 12345678" />
+<main class="py-10 px-4">
+  <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow p-6">
+    <h1 class="text-2xl font-bold">Identity Verification</h1>
+    <div class="stepbar"><div id="progressFill" class="stepbar-fill"></div></div>
+    <p class="muted mt-2">Provide your details and upload the required documents for verification.</p>
 
-      <label>Phone used to apply for loan (2547XXXXXXXX) *</label>
-      <input id="phone" name="phone" type="tel" required placeholder="2547XXXXXXXX" />
+    <form id="verifyForm" class="mt-6 space-y-4" novalidate>
+      <div>
+        <label class="block text-sm font-medium">Full name *</label>
+        <input id="fullName" type="text" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary">
+        <div id="nameError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <label>Front of ID (preview below) *</label>
-      <input id="frontID" name="frontID" type="file" accept="image/*" required />
-      <div id="frontPreview" class="preview"></div>
+      <div>
+        <label class="block text-sm font-medium">ID number (8 or 9 digits) *</label>
+        <input id="idNumber" type="text" maxlength="9" inputmode="numeric" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary">
+        <div id="idError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <label>Back of ID *</label>
-      <input id="backID" name="backID" type="file" accept="image/*" required />
-      <div id="backPreview" class="preview"></div>
+      <div>
+        <label class="block text-sm font-medium">Phone (2547XXXXXXXX) *</label>
+        <input id="phone" type="tel" maxlength="12" inputmode="tel" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary">
+        <div id="phoneError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <label>Selfie (must be very clear) *</label>
-      <input id="selfie" name="selfie" type="file" accept="image/*" required />
-      <div id="selfiePreview" class="preview"></div>
+      <div>
+        <label class="block text-sm font-medium">Front of ID *</label>
+        <input id="frontFile" type="file" accept="image/*" class="mt-1">
+        <div id="frontPreview" class="preview-box mt-2"></div>
+        <div id="frontError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <button id="submitBtn" class="btn" type="submit">Upload Photos</button>
+      <div>
+        <label class="block text-sm font-medium">Back of ID *</label>
+        <input id="backFile" type="file" accept="image/*" class="mt-1">
+        <div id="backPreview" class="preview-box mt-2"></div>
+        <div id="backError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <div id="loader" class="spinner" aria-hidden="true"></div>
+      <div>
+        <label class="block text-sm font-medium">Selfie *</label>
+        <input id="selfieFile" type="file" accept="image/*" class="mt-1">
+        <div id="selfiePreview" class="preview-box mt-2"></div>
+        <div id="selfieError" class="text-sm text-red-600 hidden"></div>
+      </div>
 
-      <div id="msg"></div>
-      <p class="small">By submitting you authorize Swift Loan to verify your identity.</p>
+      <div class="flex gap-3 mt-4">
+        <button id="resetBtn" type="button" class="px-4 py-2 rounded-md border">Reset</button>
+        <button id="submitBtn" type="submit" class="px-4 py-2 rounded-md bg-primary text-white font-semibold">Submit for verification</button>
+        <div id="loading" class="hidden ml-3"><div class="spinner"></div></div>
+      </div>
+      <div id="resultMessage" class="mt-3"></div>
     </form>
   </div>
+</main>
 
-  <script>
-    const frontendUploadUrl = "https://identity-verification-backend.onrender.com/upload";
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal-backdrop">
+  <div class="modal-card">
+    <h3 class="text-lg font-semibold">Confirm Submission</h3>
+    <p class="muted mt-1">Please confirm your details and uploaded images before submission.</p>
+    <div class="mt-3">
+      <p><strong>Name:</strong> <span id="confirmName"></span></p>
+      <p><strong>ID:</strong> <span id="confirmId"></span></p>
+      <p><strong>Phone:</strong> <span id="confirmPhone"></span></p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+      <div><div class="text-sm font-medium">Selfie</div><div id="confirmSelfie" class="preview-box mt-2"></div></div>
+      <div><div class="text-sm font-medium">Front</div><div id="confirmFront" class="preview-box mt-2"></div></div>
+      <div><div class="text-sm font-medium">Back</div><div id="confirmBack" class="preview-box mt-2"></div></div>
+    </div>
+    <div class="flex justify-end gap-3 mt-4">
+      <button id="modalCancel" class="px-3 py-2 rounded-md border">Cancel</button>
+      <button id="modalConfirm" class="px-3 py-2 rounded-md bg-primary text-white">Confirm & Upload</button>
+    </div>
+  </div>
+</div>
 
-    const form = document.getElementById("form");
-    const nameInput = document.getElementById("name");
-    const idInput = document.getElementById("idNumber");
-    const phoneInput = document.getElementById("phone");
-    const selfieInput = document.getElementById("selfie");
-    const frontInput = document.getElementById("frontID");
-    const backInput = document.getElementById("backID");
-    const submitBtn = document.getElementById("submitBtn");
-    const loader = document.getElementById("loader");
-    const msg = document.getElementById("msg");
+<footer>
+  <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div>
+      <h3 class="text-xl font-bold mb-2">Swift Loan</h3>
+      <p class="text-gray-400 text-sm max-w-xs">Fast, secure, and convenient loans. Now with instant verification.</p>
+    </div>
+    <div>
+      <h4 class="font-semibold mb-2">Quick Links</h4>
+      <a href="index.html" class="block text-gray-400 hover:text-white">Home</a>
+    </div>
+    <div>
+      <h4 class="font-semibold mb-2">Support</h4>
+      <p class="text-gray-400">Call: <a href="tel:0732202740" class="text-white">0732202740</a></p>
+      <p class="text-gray-400 mt-1">WhatsApp: <a href="https://wa.me/254732202740" target="_blank" class="text-white">Chat Now</a></p>
+    </div>
+  </div>
+</footer>
 
-    const selfiePreview = document.getElementById("selfiePreview");
-    const frontPreview = document.getElementById("frontPreview");
-    const backPreview = document.getElementById("backPreview");
+<script>
+const BACKEND_UPLOAD_URL='https://identity-verification-backend.onrender.com/upload';
+const verifyForm=document.getElementById('verifyForm');
+const nameEl=document.getElementById('fullName'),idEl=document.getElementById('idNumber'),phoneEl=document.getElementById('phone');
+const nameErr=document.getElementById('nameError'),idErr=document.getElementById('idError'),phoneErr=document.getElementById('phoneError');
+const front=document.getElementById('frontFile'),back=document.getElementById('backFile'),selfie=document.getElementById('selfieFile');
+const frontErr=document.getElementById('frontError'),backErr=document.getElementById('backError'),selfieErr=document.getElementById('selfieError');
+const frontPrev=document.getElementById('frontPreview'),backPrev=document.getElementById('backPreview'),selfiePrev=document.getElementById('selfiePreview');
+const modal=document.getElementById('confirmModal'),modalCancel=document.getElementById('modalCancel'),modalConfirm=document.getElementById('modalConfirm');
+const confirmName=document.getElementById('confirmName'),confirmId=document.getElementById('confirmId'),confirmPhone=document.getElementById('confirmPhone');
+const confirmFront=document.getElementById('confirmFront'),confirmBack=document.getElementById('confirmBack'),confirmSelfie=document.getElementById('confirmSelfie');
+const loading=document.getElementById('loading'),progress=document.getElementById('progressFill'),result=document.getElementById('resultMessage');
 
-    // preview helper
-    function previewFile(input, container) {
-      container.innerHTML = "";
-      const file = input.files[0];
-      if (!file) return;
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.onload = () => URL.revokeObjectURL(img.src);
-      container.appendChild(img);
+function toggleMobileMenu(){document.getElementById('mobileMenu').classList.toggle('hidden');}
+document.getElementById('mobileMenu').addEventListener('click',e=>{if(e.target.id==='mobileMenu')toggleMobileMenu();});
+document.getElementById('mobileMenuBtn').onclick=toggleMobileMenu;
+
+function previewFile(inp,box){box.innerHTML='';if(inp.files[0]){const img=new Image();img.src=URL.createObjectURL(inp.files[0]);img.onload=()=>URL.revokeObjectURL(img.src);img.classList.add('rounded-lg','max-h-40','mx-auto');box.appendChild(img);}}
+
+[front,back,selfie].forEach((inp,i)=>inp.addEventListener('change',()=>{[frontPrev,backPrev,selfiePrev][i].innerHTML='';previewFile(inp,[frontPrev,backPrev,selfiePrev][i]);validateField(inp);}));
+
+function validateField(input){
+  let valid = true;
+
+  if(input === nameEl){
+    const name = nameEl.value.trim();
+    if(name.length < 2){
+      nameErr.textContent = 'Enter full name';
+      nameErr.classList.remove('hidden');
+      nameEl.classList.add('border-red-500');
+      valid = false;
+    } else {
+      nameErr.classList.add('hidden');
+      nameEl.classList.remove('border-red-500');
+      nameEl.classList.add('border-green-500');
     }
+  }
 
-    selfieInput.addEventListener("change", () => previewFile(selfieInput, selfiePreview));
-    frontInput.addEventListener("change", () => previewFile(frontInput, frontPreview));
-    backInput.addEventListener("change", () => previewFile(backInput, backPreview));
-
-    // form validation functions
-    function validateName(v) {
-      return typeof v === "string" && v.trim().length >= 2;
+  if(input === idEl){
+    const cleanID = idEl.value.replace(/\D/g, '');
+    if(!/^\d{8,9}$/.test(cleanID)){
+      idErr.textContent = 'ID must be 8 or 9 digits';
+      idErr.classList.remove('hidden');
+      idEl.classList.add('border-red-500');
+      valid = false;
+    } else {
+      idErr.classList.add('hidden');
+      idEl.classList.remove('border-red-500');
+      idEl.classList.add('border-green-500');
     }
-    function validateID(v) {
-      return /^\d{8,9}$/.test(v);
+  }
+
+  if(input === phoneEl){
+    const cleanPhone = phoneEl.value.replace(/\D/g, '');
+    if(!/^2547\d{8}$/.test(cleanPhone)){
+      phoneErr.textContent = 'Phone must be in the format 2547XXXXXXXX';
+      phoneErr.classList.remove('hidden');
+      phoneEl.classList.add('border-red-500');
+      valid = false;
+    } else {
+      phoneErr.classList.add('hidden');
+      phoneEl.classList.remove('border-red-500');
+      phoneEl.classList.add('border-green-500');
     }
-    function validatePhone(v) {
-      return /^2547\d{8}$/.test(v);
-    }
+  }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.innerHTML = "";
+  if(input === front){
+    if(!front.files[0]){
+      frontErr.textContent = 'Front ID required';
+      frontErr.classList.remove('hidden');
+      valid = false;
+    } else frontErr.classList.add('hidden');
+  }
 
-      const name = nameInput.value.trim();
-      const idNumber = idInput.value.trim();
-      const phone = phoneInput.value.trim();
+  if(input === back){
+    if(!back.files[0]){
+      backErr.textContent = 'Back ID required';
+      backErr.classList.remove('hidden');
+      valid = false;
+    } else backErr.classList.add('hidden');
+  }
 
-      if (!validateName(name)) return showError("Please enter your full name as on ID.");
-      if (!validateID(idNumber)) return showError("ID number must be 8 or 9 digits.");
-      if (!validatePhone(phone)) return showError("Phone must be in 2547XXXXXXXX format.");
+  if(input === selfie){
+    if(!selfie.files[0]){
+      selfieErr.textContent = 'Selfie required';
+      selfieErr.classList.remove('hidden');
+      valid = false;
+    } else selfieErr.classList.add('hidden');
+  }
 
-      if (!selfieInput.files[0] || !frontInput.files[0] || !backInput.files[0]) {
-        return showError("All three images are required.");
-      }
+  return valid;
+}
 
-      // Optional client-side selfie clarity check: ensure file size > 10KB (very small heuristic)
-      if (selfieInput.files[0].size < 10240) {
-        return showError("Selfie file looks too small — please upload a clear selfie.");
-      }
+[nameEl,idEl,phoneEl].forEach(i=>i.addEventListener('input',()=>validateField(i)));
 
-      // All validations passed - prepare upload
-      const fd = new FormData();
-      fd.append("name", name);
-      fd.append("idNumber", idNumber);
-      fd.append("phone", phone);
-      fd.append("selfie", selfieInput.files[0]);
-      fd.append("frontID", frontInput.files[0]);
-      fd.append("backID", backInput.files[0]);
+verifyForm.onsubmit=e=>{e.preventDefault();const all=[nameEl,idEl,phoneEl,front,back,selfie];let ok=true;all.forEach(f=>{if(!validateField(f))ok=false;});if(!ok)return;
+progress.style.width='66%';confirmName.textContent=nameEl.value;confirmId.textContent=idEl.value;confirmPhone.textContent=phoneEl.value;
+[confirmFront,confirmBack,confirmSelfie].forEach(c=>c.innerHTML='');
+[front,back,selfie].forEach((f,i)=>{if(f.files[0]){const img=new Image();img.src=URL.createObjectURL(f.files[0]);img.onload=()=>URL.revokeObjectURL(img.src);[confirmFront,confirmBack,confirmSelfie][i].appendChild(img);}});
+modal.classList.add('open');
+};
 
-      // UI: show spinner and disable button
-      submitBtn.disabled = true;
-      loader.classList.add("show");
-      msg.innerHTML = "";
+modalCancel.onclick=()=>{modal.classList.remove('open');progress.style.width='33%';};
 
-      try {
-        const resp = await fetch(frontendUploadUrl, { method: "POST", body: fd });
-        const data = await resp.json();
-
-        if (data && data.success) {
-          // Successful submission - show friendly success message (no links shown to users)
-          msg.innerHTML = '<div class="success">✅ Your photos have been submitted successfully. Our verification team will review them shortly.</div>';
-          // Clear previews and inputs if you like (keeps form for another upload)
-          selfieInput.value = "";
-          frontInput.value = "";
-          backInput.value = "";
-          selfiePreview.innerHTML = "";
-          frontPreview.innerHTML = "";
-          backPreview.innerHTML = "";
-        } else {
-          showError((data && data.message) || "Upload failed. Try again.");
-        }
-      } catch (err) {
-        console.error(err);
-        showError("Network error while uploading. Please try again.");
-      } finally {
-        submitBtn.disabled = false;
-        loader.classList.remove("show");
-      }
-    });
-
-    function showError(text) {
-      msg.innerHTML = '<div class="error">❌ ' + text + "</div>";
-    }
-  </script>
+modalConfirm.onclick=async()=>{
+modal.classList.remove('open');loading.classList.remove('hidden');progress.style.width='100%';
+const fd=new FormData();fd.append('name',nameEl.value);fd.append('idNumber',idEl.value);fd.append('phone',phoneEl.value);fd.append('selfie',selfie.files[0]);fd.append('frontID',front.files[0]);fd.append('backID',back.files[0]);
+try{const r=await fetch(BACKEND_UPLOAD_URL,{method:'POST',body:fd});const j=await r.json();loading.classList.add('hidden');
+if(j.success){result.innerHTML='<div class="text-green-700 font-semibold">✅ Submitted successfully.</div>';verifyForm.reset();progress.style.width='100%';}
+else{result.innerHTML='<div class="text-red-600 font-semibold">Upload failed.</div>';progress.style.width='66%';}}catch(err){loading.classList.add('hidden');result.innerHTML='<div class="text-red-600 font-semibold">Network error.</div>';progress.style.width='66%';}
+};
+</script>
 </body>
-</html>
+                   </html>
